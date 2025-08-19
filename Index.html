@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Habibi Express • Fastpris v2.2 (mobil)</title>
+<style>
+  :root { --fg:#111; --muted:#6b7280; --bg:#fff; --line:#e5e7eb; --accent:#111; --bad:#b91c1c; }
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto; color:var(--fg); background:var(--bg)}
+  .wrap{max-width:960px;margin:0 auto;padding:16px}
+  h1{margin:0 0 4px;font-size:24px;font-weight:800}
+  .sub{color:var(--muted);font-size:12px}
+  .grid{display:grid;gap:12px}
+  .g3{grid-template-columns:1fr} @media(min-width:720px){.g3{grid-template-columns:repeat(3,1fr)}}
+  .card{border:1px solid var(--line);border-radius:14px;padding:14px}
+  label{font-size:12px;color:var(--fg);display:block;margin-bottom:6px}
+  input[type=number],input[type=text],input[type=date],select{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff
+  }
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .btn.primary{background:#111;color:#fff;border-color:#111}
+  .k{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .k:last-child{border-bottom:0}
+  .sum{font-weight:800;font-size:18px}
+  .warn{border:1px solid #fecaca;background:#fff1f2;color:#7f1d1d;border-radius:10px;padding:10px}
+  .muted{color:var(--muted);font-size:12px}
+  .foot{margin-top:10px;text-align:center;color:var(--muted);font-size:12px}
+  .pill{padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;">
+      <div>
+        <h1>Habibi Express</h1>
+        <div class="sub">تعال إلى دبي • +47 47 8787 69</div>
+        <div class="sub">Fastpris-kalkulator v2.2 (mobilvennlig)</div>
+      </div>
+      <div style="text-align:right">
+        <div id="total" style="font-weight:900;font-size:22px">–</div>
+        <div class="sub">Depositum 15%: <b id="deposit">–</b></div>
+      </div>
+    </header>
+
+    <div id="marginAlert" class="warn" style="display:none;margin-top:12px">
+      <b>Margin-advarsel:</b> Pris ser lav ut. Øk pakke, reduser rabatt eller slå av mikro-modus.
+    </div>
+
+    <div class="grid g3" style="margin-top:12px">
+      <div class="card" style="grid-column: span 2">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px">
+          <div style="font-weight:700">Inndata</div>
+          <div class="grid" style="grid-auto-flow:column;gap:8px">
+            <button class="btn" id="shareBtn">Del lenke</button>
+            <button class="btn" id="resetBtn">Nullstill</button>
+          </div>
+        </div>
+
+        <div class="grid g3">
+          <div class="row">
+            <div>
+              <div style="font-weight:600;font-size:13px">Mikroflytt (Habibi Courier)</div>
+              <div class="sub">0–5 / 5–10 / 10–15 km + enkel håndtering</div>
+            </div>
+            <input type="checkbox" id="micro"/>
+          </div>
+
+          <div>
+            <label>Pakkenivå</label>
+            <select id="pkg">
+              <option value="Lite">Lite (1,5 t)</option>
+              <option value="Standard" selected>Standard (2,5 t)</option>
+              <option value="Premium">Premium (3,5 t + 1 rom demontering)</option>
+            </select>
+            <div class="muted">Pakker brukes ikke i mikro-modus.</div>
+          </div>
+
+          <div>
+            <label>Kapasitet i dag (%)</label>
+            <input type="number" id="util" min="0" max="100" step="5" value="60"/>
+            <div class="muted">Flex-rabatt: <span id="flexPct">–</span></div>
+          </div>
+
+          <div>
+            <label>Kjøretid fra kart (min)</label>
+            <input type="number" id="driveMin" min="0" step="1" value="18"/>
+            <div class="muted">Ikke brukt i mikro-modus.</div>
+          </div>
+
+          <div>
+            <label>Trafikk</label>
+            <select id="traf">
+              <option value="dag">Hverdag 09–14 (1,15×)</option>
+              <option value="annet">Øvrig tid (1,25×)</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Avstand én vei (km)</label>
+            <input type="number" id="km1" min="0" step="0.1" value="10"/>
+            <div class="muted">Utenbys-tillegg >20 km. Mikro ≤15 km.</div>
+          </div>
+
+          <div class="row">
+            <div>
+              <div style="font-weight:600;font-size:13px">Henting: heis?</div>
+              <div class="sub">Slår av etasje-timer</div>
+            </div>
+            <input type="checkbox" id="plift" checked />
+          </div>
+          <div>
+            <label>Henting – etasjer uten heis</label>
+            <input type="number" id="pfloor" min="0" step="1" value="0"/>
+          </div>
+
+          <div class="row">
+            <div>
+              <div style="font-weight:600;font-size:13px">Levering: heis?</div>
+              <div class="sub">Slår av etasje-timer</div>
+            </div>
+            <input type="checkbox" id="dlift" checked />
+          </div>
+          <div>
+            <label>Levering – etasjer uten heis</label>
+            <input type="number" id="dfloor" min="0" step="1" value="0"/>
+          </div>
+
+          <div class="row">
+            <div>
+              <div style="font-weight:600;font-size:13px">Henting: bære >50 m</div>
+              <div class="sub">+0,25 t</div>
+            </div>
+            <input type="checkbox" id="plong"/>
+          </div>
+
+          <div class="row">
+            <div>
+              <div style="font-weight:600;font-size:13px">Levering: bære >50 m</div>
+              <div class="sub">+0,25 t</div>
+            </div>
+            <input type="checkbox" id="dlong"/>
+          </div>
+
+          <div>
+            <label>Svært tunge/voluminøse (antall)</label>
+            <input type="number" id="heavy" min="0" step="1" value="0"/>
+            <div class="muted">Piano, safe, amerikansk kjøl (+0,50 t hver). Ikke i mikro.</div>
+          </div>
+
+          <div>
+            <label>Demontering/montering (rom)</label>
+            <input type="number" id="disasm" min="0" step="1" value="0"/>
+            <div class="muted">0,50 t per rom. Premium inkluderer 1 rom.</div>
+          </div>
+
+          <div class="row">
+            <div>
+              <div style="font-weight:600;font-size:13px">Kveld/helg/helligdag</div>
+              <div class="sub">+15 %</div>
+            </div>
+            <input type="checkbox" id="eve"/>
+          </div>
+
+          <div class="row">
+            <div>
+              <div style="font-weight:600;font-size:13px">Retur-/kombioppdrag</div>
+              <div class="sub">−5 %</div>
+            </div>
+            <input type="checkbox" id="combo"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:8px">Prisoppsummering</div>
+        <div class="k"><span>Startgebyr</span><span id="k_start">–</span></div>
+        <div class="k" id="row_drive"><span>Kjøring (<span id="k_mins">–</span> min × 17)</span><span id="k_drive">–</span></div>
+        <div class="k"><span>Håndtering (H = <span id="k_H">–</span> t × 1 600)</span><span id="k_hand">–</span></div>
+        <div class="k" id="row_km"><span>Utenbys-km</span><span id="k_km">–</span></div>
+        <div class="k"><span>Tids-/helgetillegg</span><span id="k_eve">–</span></div>
+        <div class="k"><span>Rabatt (<span id="k_discpct">–</span>)</span><span id="k_disc">–</span></div>
+        <div class="k sum"><span>Å betale (avrundet)</span><span id="k_total">–</span></div>
+        <div class="k"><span>Depositum 15 %</span><span id="k_dep">–</span></div>
+        <div class="muted" style="margin-top:6px">
+          Minstepris (standard): 3 690 kr. Avrunding til nærmeste 50 kr. Endringer på stedet kan kreve ny beregning og kundesignatur.
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">© <span id="yy"></span> Habibi Express • Bergen</div>
+  </div>
+
+<script>
+const C = {
+  startFee:490, krPerMin:17, timeRate:1600,
+  baseHours:{Lite:1.5, Standard:2.5, Premium:3.5},
+  premiumRoomsCredit:1,
+  perFloorNoLift:0.20, longCarryPerAddress:0.25,
+  veryHeavyPerItem:0.50, disassemblyPerRoom:0.50,
+  trafficDay:1.15, trafficOther:1.25,
+  outsideKmThreshold:20, outsideKrPerKm:4,
+  evePct:0.15, comboDisc:0.05,
+  minPrice:3690, depositPct:0.15,
+  microTiers:[{maxKm:5,price:990},{maxKm:10,price:1290},{maxKm:15,price:1590}],
+};
+function round50(n){ n=Math.round(n); const r=n%50; return r===0?n:(r>=25?n+(50-r):n-r); }
+function flexDisc(util){ return util<=40?0.12:(util<70?0.08:0.05); }
+function qget(k){ return new URLSearchParams(location.search).get(k); }
+function qset(params){
+  const sp=new URLSearchParams(location.search);
+  Object.entries(params).forEach(([k,v])=>sp.set(k,String(v)));
+  history.replaceState({}, "", location.pathname+"?"+sp.toString());
+  return location.href;
+}
+function el(id){ return document.getElementById(id); }
+function kr(n){ return new Intl.NumberFormat("no-NO",{style:"currency",currency:"NOK",maximumFractionDigits:0}).format(Math.round(n)); }
+
+const ids = ["micro","pkg","util","driveMin","traf","km1","plift","pfloor","dlift","dfloor","plong","dlong","heavy","disasm","eve","combo"];
+function read(){
+  return {
+    micro: el("micro").checked,
+    pkg: el("pkg").value,
+    util: +el("util").value||0,
+    driveMin: +el("driveMin").value||0,
+    traf: el("traf").value,
+    km1: +el("km1").value||0,
+    plift: el("plift").checked,
+    pfloor: +el("pfloor").value||0,
+    dlift: el("dlift").checked,
+    dfloor: +el("dfloor").value||0,
+    plong: el("plong").checked,
+    dlong: el("dlong").checked,
+    heavy: +el("heavy").value||0,
+    disasm: +el("disasm").value||0,
+    eve: el("eve").checked,
+    combo: el("combo").checked,
+  };
+}
+
+function applyQuery(){
+  const s = new URLSearchParams(location.search);
+  const setB = (id, v) => { if(v!==null){ el(id).checked = (v==="1"||v==="true"); } }
+  const setN = (id, v) => { if(v!==null){ el(id).value = v; } }
+  const setS = (id, v) => { if(v!==null){ el(id).value = v; } }
+
+  setB("micro", s.get("mm"));
+  setS("pkg", s.get("pkg"));
+  setN("util", s.get("ut"));
+  setN("driveMin", s.get("dm"));
+  setS("traf", s.get("tb")==="dag"?"dag":"annet");
+  setN("km1", s.get("km"));
+  setB("plift", s.get("pl"));
+  setN("pfloor", s.get("pf"));
+  setB("dlift", s.get("dl"));
+  setN("dfloor", s.get("df"));
+  setB("plong", s.get("plc"));
+  setB("dlong", s.get("dlc"));
+  setN("heavy", s.get("hi"));
+  setN("disasm", s.get("dr"));
+  setB("eve", s.get("ew"));
+  setB("combo", s.get("cr"));
+}
+
+function calc(){
+  const v = read();
+  const trafficFactor = v.traf==="dag"?C.trafficDay:C.trafficOther;
+  const adjDriveMin = Math.round(v.driveMin * trafficFactor);
+
+  // Effektive etasjer (heis=av)
+  const effPF = v.plift?0:v.pfloor;
+  const effDF = v.dlift?0:v.dfloor;
+
+  // Timetillegg
+  const stairsH = C.perFloorNoLift*(effPF + effDF);
+  const carryH  = C.longCarryPerAddress*( (v.plong?1:0) + (v.dlong?1:0) );
+  const heavyH  = C.veryHeavyPerItem * (v.micro?0:v.heavy);
+  const disasmRooms = v.micro?0:Math.max(0, v.disasm - (v.pkg==="Premium"?C.premiumRoomsCredit:0));
+  const disasmH = C.disassemblyPerRoom * disasmRooms;
+
+  const baseH = v.micro ? 0.5 : C.baseHours[v.pkg || "Standard"];
+  const H = baseH + stairsH + carryH + heavyH + disasmH;
+  const handling = H * C.timeRate;
+
+  let subtotal = C.startFee;
+  let drivingCost = 0, extraKm=0, outsideKmCost=0, tierPrice=0;
+  let mode = "standard";
+
+  if(v.micro && v.km1<=15){
+    mode = "micro";
+    const tier = C.microTiers.find(t => v.km1 <= t.maxKm) || C.microTiers[C.microTiers.length-1];
+    tierPrice = tier.price;
+    subtotal += tierPrice + handling; // kjøring + km inkludert i tier
+  } else {
+    mode = "standard";
+    drivingCost = adjDriveMin * C.krPerMin;
+    extraKm = Math.max(0, v.km1 - C.outsideKmThreshold);
+    outsideKmCost = extraKm * C.outsideKrPerKm;
+    subtotal += drivingCost + handling + outsideKmCost;
+  }
+
+  const eveAddon = v.eve ? subtotal*C.evePct : 0;
+
+  const flex = flexDisc(v.util);
+  el("flexPct").textContent = Math.round(flex*100) + " %";
+  const discRate = flex + (v.combo?C.comboDisc:0);
+  const discount = (subtotal + eveAddon) * discRate;
+
+  const raw = subtotal + eveAddon - discount;
+  const rounded = mode==="standard" ? Math.max(C.minPrice, round50(raw)) : round50(raw);
+  const deposit = round50(rounded * C.depositPct);
+
+  // Margin-vakt (enkel): hvis rounded < (handling + 0.5*drivingCost) ≈ lav margin
+  const marginBad = rounded < (handling + 0.5*drivingCost);
+
+  // UI
+  el("k_start").textContent = kr(C.startFee);
+  el("row_drive").style.display = mode==="standard" ? "" : "none";
+  el("k_mins").textContent = adjDriveMin;
+  el("k_drive").textContent = kr(drivingCost);
+  el("k_H").textContent = H.toFixed(2);
+  el("k_hand").textContent = kr(handling);
+  el("row_km").style.display = mode==="standard" ? "" : "none";
+  el("k_km").textContent = kr(outsideKmCost);
+  el("k_eve").textContent = kr(eveAddon);
+  el("k_discpct").textContent = Math.round(discRate*100) + " %";
+  el("k_disc").textContent = "-" + kr(discount);
+  el("k_total").textContent = kr(rounded);
+  el("total").textContent = kr(rounded);
+  el("k_dep").textContent = kr(deposit);
+  el("deposit").textContent = kr(deposit);
+
+  el("marginAlert").style.display = marginBad ? "" : "none";
+}
+function share(){
+  const v = read();
+  const url = qset({
+    mm:v.micro?1:0, pkg:v.pkg, ut:v.util, dm:v.driveMin,
+    tb:(v.traf==="dag"?"dag":"annet"), km:v.km1,
+    pl:v.plift?1:0, pf:v.pfloor, dl:v.dlift?1:0, df:v.dfloor,
+    plc:v.plong?1:0, dlc:v.dlong?1:0, hi:v.heavy, dr:v.disasm,
+    ew:v.eve?1:0, cr:v.combo?1:0,
+  });
+  if(navigator.clipboard){ navigator.clipboard.writeText(url); alert("Lenke kopiert!"); }
+  else { prompt("Kopier lenke:", url); }
+}
+function reset(){
+  location.search=""; location.reload();
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  applyQuery();
+  ids.forEach(id=>{
+    const n = el(id);
+    n.addEventListener(n.type==="checkbox"?"change":"input", calc);
+  });
+  el("shareBtn").addEventListener("click", share);
+  el("resetBtn").addEventListener("click", reset);
+  el("yy").textContent = new Date().getFullYear();
+  calc();
+});
+</script>
+</body>
+</html>
